@@ -2,21 +2,10 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 7,
+   "id": "a78f53bb",
    "metadata": {},
-   "outputs": [
-    {
-     "ename": "ModuleNotFoundError",
-     "evalue": "No module named 'darts'",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)",
-      "\u001b[0;32m<ipython-input-2-cafe4c92f5cd>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0;32mfrom\u001b[0m \u001b[0mdarts\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmodels\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mNBEATSModel\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      2\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mdarts\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdataprocessing\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtransformers\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mScaler\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mdarts\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmetrics\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mmae\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrmse\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mjoblib\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
-      "\u001b[0;31mModuleNotFoundError\u001b[0m: No module named 'darts'"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "from darts.models import NBEATSModel\n",
     "from darts.dataprocessing.transformers import Scaler\n",
@@ -29,13 +18,15 @@
     "    def __init__(self, input_chunk_length, output_chunk_length, model_params=None):\n",
     "        \"\"\"\n",
     "        Initialize forecastign pipeline.\n",
-    "\n",
+    "        \n",
     "        :param input_chunk_length: size of input chunk lenght.\n",
     "        :param output_chunk_length: size of output chunk lenght.\n",
+    "        :param train_test_split (float): train and test size proportion (between 0 and 1).\n",
     "        :param model_params: N-BEATS model parameters.\n",
     "        \"\"\"\n",
     "        self.input_chunk_length = input_chunk_length\n",
     "        self.output_chunk_length = output_chunk_length\n",
+    "        self.train_test_split = train_test_split\n",
     "        self.model_params = model_params if model_params else {}\n",
     "        self.epochs = epochs\n",
     "        self.model = None\n",
@@ -65,6 +56,21 @@
     "            output_chunk_length=self.output_chunk_length,\n",
     "            **self.model_params\n",
     "        )\n",
+    "\n",
+    "    def data_split(self, series):\n",
+    "        \"\"\"\n",
+    "        Dividing the series into train and test samples.\n",
+    "\n",
+    "        Args:\n",
+    "            series (TimeSeries): Entire series.\n",
+    "\n",
+    "        Returns:\n",
+    "            tuple: (train_series, test_series)\n",
+    "        \"\"\"\n",
+    "        split_idx = int(len(series) * self.train_test_split)\n",
+    "        train_series = series[:split_idx]\n",
+    "        test_series = series[split_idx:]\n",
+    "        return train_series, test_series\n",
     "\n",
     "    def training_model(self, train_series, covariates=None, val_series=None, val_covariates=None):\n",
     "        \"\"\"\n",
@@ -124,18 +130,11 @@
     "        self.model.save_model(f\"{path}/nbeats_model.pth.tar\")\n",
     "        joblib.dump(self.scaler, f\"{path}/scaler.pkl\")  "
    ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": []
   }
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "Python 3",
+   "display_name": "Python 3 (ipykernel)",
    "language": "python",
    "name": "python3"
   },
@@ -149,7 +148,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.7.6"
+   "version": "3.12.4"
   }
  },
  "nbformat": 4,
